@@ -38,7 +38,7 @@ jobs:
 
       - name: Run Postman collection
         run: |
-          newman run postman_collection.json \
-            --environment postman_env.json \
+          newman run ChatBot AI.postman_collection.json \
+            --environment ChatBot AI.postman_environment.json \
             --reporters cli,junit \
             --reporter-junit-export results.xml
