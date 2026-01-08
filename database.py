@@ -1,5 +1,6 @@
 ﻿import sqlite3
 import auth
+import uuid
 
 DB_FILE = "iachatbot.db"
 
@@ -15,7 +16,7 @@ def init_db():
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id TEXT PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL UNIQUE,
             password TEXT NOT NULL
         )
@@ -31,8 +32,12 @@ def create_user(username: str, password: str) -> bool:
     if cursor.fetchone():
         conn.close()
         return False
+    user_id = str(uuid.uuid4())
     hashed_pw = auth.get_password_hash(password)
-    cursor.execute("INSERT INTO users (name, password) VALUES (?, ?)", (username, hashed_pw))
+    cursor.execute(
+        "INSERT INTO users (id, name, password) VALUES (?, ?, ?)",
+        (user_id, username, hashed_pw)
+    )
     conn.commit()
     conn.close()
     return True
