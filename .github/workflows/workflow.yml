@@ -1,5 +1,4 @@
-﻿name: API Postman Tests
-
+﻿name: workflow.yml
 on:
   push:
     branches: [ "main" ]
@@ -22,12 +21,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-
       - name: Start FastAPI app
         run: |
-          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          uvicorn main:app --host 0.0.0.0 --port 8000 &
           sleep 5  # wait for the server to start
-
       - name: Install Node.js (for Newman)
         uses: actions/setup-node@v3
         with:
@@ -38,7 +35,7 @@ jobs:
 
       - name: Run Postman collection
         run: |
-          newman run postman_collection.json \
-            --environment postman_env.json \
+          newman run AI.postman_collection.json \
+            --environment AI.postman_environment.json \
             --reporters cli,junit \
             --reporter-junit-export results.xml
