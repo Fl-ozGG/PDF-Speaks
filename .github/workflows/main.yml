@@ -2,9 +2,7 @@ name: API Postman Tests
 
 on:
   push:
-    branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]
 
 jobs:
   postman-tests:
