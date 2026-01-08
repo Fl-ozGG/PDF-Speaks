@@ -20,6 +20,8 @@ async def register(username: str = Body(...), password: str = Body(...)):
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     user = database.get_user(form_data.username)
     if not user or not auth.verify_password(form_data.password, user["hashed_password"]):
+
+
         raise HTTPException(status_code=401, detail="Credenciales incorrectas")
     access_token = auth.create_access_token(data={"sub": user["username"]})
     return {"access_token": access_token, "token_type": "bearer"}
