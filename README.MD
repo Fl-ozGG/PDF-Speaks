@@ -59,6 +59,5 @@
 ### Variables de Entorno
 Crea un archivo `.env` en la raíz del proyecto con las siguientes claves:
 ```env
-SECRET_KEY="tu_clave_secreta_para_jwt"
 OPENAI_API_KEY="sk-..."
 PINECONE_API_KEY="tu_api_key_de_pinecone"
