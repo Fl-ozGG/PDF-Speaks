@@ -38,7 +38,6 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
 @app.get("/perfil")
 async def read_users_me(current_user: str = Depends(auth.get_current_user)):
-    print(os.getenv("PINECONE_API_KEY"))
     return {"mensaje": f"Hola {current_user}, este es tu perfil privado."}
 
 
