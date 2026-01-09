@@ -30,11 +30,9 @@ jobs:
 
       - name: Run Server and Postman Tests
         env:
-          # Estos nombres deben coincidir con los que crees en Settings > Secrets > Actions
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
           PINECONE_INDEX_NAME: "turbolauncher"
-          # Añade SECRET_KEY si tu auth.py la necesita
           SECRET_KEY: "secret_key"
         run: |
           uvicorn main:app --host 127.0.0.1 --port 8000 > server.log 2>&1 &
