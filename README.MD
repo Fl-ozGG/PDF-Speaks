@@ -7,6 +7,15 @@
 
 **TurboLauncher** is an intelligent search and question-answering engine built on **RAG (Retrieval-Augmented Generation)**. It allows users to upload PDF files, process them to extract knowledge, and query them in natural language, returning precise, contextually relevant answers strictly based on their personal documents.
 
+## 📖 API Documentation
+
+You can explore and test the API endpoints using our official Postman documentation:
+
+[![Postman Documentation](https://img.shields.io/badge/Postman-Documentation-FF6C37?style=for-the-badge&logo=postman&logoColor=white)](https://documenter.getpostman.com/view/40133516/2sBXVfiArJ)
+
+Alternatively, click the link below:
+[View Postman Documentation](https://documenter.getpostman.com/view/40133516/2sBXVfiArJ)
+
 ---
 
 ## 🐳 Deployment with Docker Compose (Recommended)
