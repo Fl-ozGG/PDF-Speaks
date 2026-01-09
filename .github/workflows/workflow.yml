@@ -2,6 +2,7 @@
 on:
   push:
   pull_request:
+
 jobs:
   postman-tests:
     runs-on: ubuntu-latest
@@ -18,10 +19,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      - name: Start FastAPI app
-        run: |
-          uvicorn main:app --host 0.0.0.0 --port 8000 &
-          sleep 5  # wait for the server to start
+
       - name: Install Node.js (for Newman)
         uses: actions/setup-node@v3
         with:
@@ -30,9 +28,28 @@ jobs:
       - name: Install Newman
         run: npm install -g newman
 
-      - name: Run Postman collection
+      - name: Run Server and Postman Tests
+        env:
+          # Estos nombres deben coincidir con los que crees en Settings > Secrets > Actions
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+          PINECONE_INDEX_NAME: "turbolauncher"
+          # Añade SECRET_KEY si tu auth.py la necesita
+          SECRET_KEY: ${{ secrets.SECRET_KEY }} 
         run: |
+          uvicorn main:app --host 127.0.0.1 --port 8000 > server.log 2>&1 &
+          
+          echo "Esperando a que FastAPI arranque..."
+          timeout 30s bash -c 'until curl -s http://127.0.0.1:8000/token > /dev/null; do sleep 1; done' || (cat server.log && exit 1)
+          
           newman run AI.postman_collection.json \
             --environment AI.postman_environment.json \
             --reporters cli,junit \
             --reporter-junit-export results.xml
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: postman-results
+          path: results.xml
