@@ -1,20 +1,25 @@
+from pathlib import Path
 from fastapi import FastAPI, Depends, HTTPException, Body, UploadFile, File
 from fastapi.security import OAuth2PasswordRequestForm
-import auth
-import pdf_processing
-import database
-import shutil
-from pathlib import Path
-import uuid
-from db_pinecone import get_pinecone_index
-from openai_utils import get_embedding
 import os
+import shutil
+import uuid
+
+
+import auth
+import database
+import pdf_processing
+from db_pinecone import get_pinecone_index
+from openai_utils import get_embedding, generate_answer
+
+
 app = FastAPI()
 
 database.init_db()
 
 
 #----------------- AUTH ENDPOINTS ---------------------------------------------------------------
+
 @app.post("/register", status_code=201)
 async def register(username: str = Body(...), password: str = Body(...)):
     if not database.create_user(username, password):
@@ -37,70 +42,129 @@ async def read_users_me(current_user: str = Depends(auth.get_current_user)):
     return {"mensaje": f"Hola {current_user}, este es tu perfil privado."}
 
 
-#----------------- PDF LOAD ENDPOINTS ---------------------------------------------------------------
 
 UPLOAD_DIR = Path("uploaded_pdfs")
+
 UPLOAD_DIR.mkdir(exist_ok=True)
+
 def get_user_folder(user_id: str) -> Path:
     folder = UPLOAD_DIR / user_id
     folder.mkdir(exist_ok=True)
     return folder
 
+#----------------- PDF LOAD ENDPOINTS ---------------------------------------------------------------
+
 @app.post("/upload-pdf")
 async def upload_pdf(
     file: UploadFile = File(...),
-    current_user: str = Depends(auth.get_current_user)  # this should return user_id
+    current_user: str = Depends(auth.get_current_user)
 ):
-    # 1️⃣ Check file type
     if not file.filename.endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Solo se permiten archivos PDF")
 
-    # 2️⃣ Save file in user-specific folder
-    user_folder = UPLOAD_DIR / current_user
+    user_folder = get_user_folder(current_user)
     user_folder.mkdir(exist_ok=True)
-
     document_id = str(uuid.uuid4())
-
     file_path = user_folder / f"{document_id}.pdf"
 
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
     processed_data = pdf_processing.process_pdf_for_user(current_user, str(file_path))
+    chunks = processed_data.get("chunks", [])
 
-    print(processed_data["chunks"][0])
+    if not chunks:
+        raise HTTPException(status_code=400, detail="El PDF no contiene texto procesable")
 
-    records = [
-        {
-            "_id": f"{document_id}-chunk-{i}",
-            "chunk_text": chunk,
-            "source_pdf": file.filename,
-            "user_id": current_user
-        }
-        for i, chunk in enumerate(processed_data["chunks"])
-    ]
-
+    # Call the updated helper with the index name
     index = get_pinecone_index("turbolauncher")
+    
     batch_size = 96
+    batch_vectors = []
 
-    for i in range(0, len(records), batch_size):
-        batch = records[i:i + batch_size]
-        vectors = [
-            {
-                "id": r["_id"],
-                "values": get_embedding(r["chunk_text"]),  # implement this with OpenAI embeddings
-                "metadata": {
-                    "source_pdf": r["source_pdf"],
-                    "user_id": r["user_id"]
-                }
+    for chunk in chunks:
+        try:
+            embedding = get_embedding(chunk["text"])
+            # Ensure embedding is a list of floats
+            if hasattr(embedding, "tolist"):
+                embedding = embedding.tolist()
+        except Exception as e:
+            print(f"Error embedding chunk {chunk['chunk_id']}: {e}")
+            continue
+
+        batch_vectors.append({
+            "id": chunk["chunk_id"],
+            "values": embedding,
+            "metadata": {
+                "document_id": chunk["document_id"],
+                "user_id": chunk["user_id"],
+                "source_pdf": file.filename,
+                "page": chunk["page"],
+                "chunk_index": chunk["chunk_index"],
+                "text": chunk["text"] # Highly recommended to store text in metadata for RAG
             }
-            for r in batch
-        ]
-        index.upsert(vectors=vectors)
+        })
+
+        if len(batch_vectors) >= batch_size:
+            index.upsert(vectors=batch_vectors)
+            batch_vectors = []
+
+    if batch_vectors:
+        index.upsert(vectors=batch_vectors)
 
     return {
         "filename": file.filename,
         "document_id": document_id,
-        "num_chunks": len(processed_data["chunks"]),
+        "num_chunks": len(chunks),
         "mensaje": "PDF recibido y procesado correctamente"
+    }
+    
+#----------------- ASK ENDPOINTS --------------------------------------------------------------------
+
+
+@app.post("/ask")
+async def ask_question(
+    question: str = Body(..., embed=True),
+    current_user: str = Depends(auth.get_current_user)
+):
+    # 1. Obtener el embedding de la pregunta
+    query_vector = get_embedding(question)
+
+    # 2. Buscar en Pinecone
+    index = get_pinecone_index("turbolauncher")
+    search_results = index.query(
+        vector=query_vector,
+        top_k=5, 
+        include_metadata=True,
+        filter={"user_id": {"$eq": current_user}}
+    )
+
+    matches = search_results.get("matches", [])
+    if not matches:
+        return {"respuesta": "No encontré información relevante."}
+
+    # 3. Extraer contexto y formatear fuentes más descriptivas
+    context_chunks = []
+    fuentes_detalladas = []
+
+    for m in matches:
+        texto_chunk = m["metadata"].get("text", "Texto no disponible")
+        context_chunks.append(texto_chunk)
+        
+        # Creamos un objeto de fuente más informativo
+        fuentes_detalladas.append({
+            "archivo": m["metadata"].get("source_pdf"),
+            "pagina": m["metadata"].get("page"),
+            "contenido_referenciado": texto_chunk[:200] + "..." # Mostramos un preview del texto
+        })
+
+    context_text = "\n\n---\n\n".join(context_chunks)
+
+    # 4. Generar respuesta con OpenAI
+    answer = generate_answer(question, context_text)
+
+    return {
+        "pregunta": question,
+        "respuesta": answer,
+        "fuentes": fuentes_detalladas
     }
