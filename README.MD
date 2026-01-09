@@ -23,7 +23,7 @@ Ensure you have a file named `docker-compose.yml` with the appropriate configura
 | Parameter | Description |
 | :--- | :--- |
 | **Persistence** | User data (`iachatbot.db`) and uploaded PDFs are stored on your local machine. |
-| **Isolation** | The API runs on port 8000 both inside and outside the container. |
+| **Isolation** | The API runs on port 8000 both inside and outside the container. (http://localhost:8000/docs) |
 | **Auto-restart** | The service restarts automatically if it crashes. |
 
 ### 3. Startup Commands
