@@ -17,14 +17,16 @@ The fastest and most robust way to run the project is using **Docker**. This ens
 * [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed.
 * A `.env` file at the project root containing your credentials.
 
-### 2. `docker-compose.yml` File
-Ensure you have a file named `docker-compose.yml` with the appropriate configuration:
+## ⚠️ Important Note for Windows Users (Database Setup)
 
-| Parameter | Description |
-| :--- | :--- |
-| **Persistence** | User data (`iachatbot.db`) and uploaded PDFs are stored on your local machine. |
-| **Isolation** | The API runs on port 8000 both inside and outside the container. |
-| **Auto-restart** | The service restarts automatically if it crashes. |
+When running this project on Windows via Docker Desktop, Docker might mistakenly create a **directory** instead of a **file** when mapping volumes that don't exist yet. This will cause the application to crash with an `OperationalError`.
+
+**Please follow these steps before running Docker for the first time:**
+
+1.  Navigate to the project's root directory.
+2.  **Manually create an empty file** named `iachatbot.db`. (You can do this by creating a new text file and renaming it, making sure it has no `.txt` extension).
+3.  Ensure there is no folder with that same name.
+4.  The application will automatically initialize the database schema inside this file once it starts.
 
 ### 3. Startup Commands
 From a terminal in the project directory:

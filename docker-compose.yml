@@ -9,6 +9,6 @@ services:
     env_file:
       - .env
     volumes:
-      - ./iachatbot.db:/app/iachatbot.db
+      - .:/app
       - ./uploaded_pdfs:/app/uploaded_pdfs
     restart: always
