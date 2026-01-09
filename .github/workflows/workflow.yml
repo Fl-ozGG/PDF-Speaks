@@ -35,13 +35,13 @@ jobs:
           PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
           PINECONE_INDEX_NAME: "turbolauncher"
           # Añade SECRET_KEY si tu auth.py la necesita
-          SECRET_KEY: ${{ secrets.SECRET_KEY }} 
+          SECRET_KEY: "secret_key"
         run: |
           uvicorn main:app --host 127.0.0.1 --port 8000 > server.log 2>&1 &
-          
+
           echo "Esperando a que FastAPI arranque..."
           timeout 30s bash -c 'until curl -s http://127.0.0.1:8000/token > /dev/null; do sleep 1; done' || (cat server.log && exit 1)
-          
+
           newman run AI.postman_collection.json \
             --environment AI.postman_environment.json \
             --reporters cli,junit \
