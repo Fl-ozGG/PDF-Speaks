@@ -9,6 +9,40 @@
 
 ---
 
+## 🐳 Despliegue con Docker Compose (Recomendado)
+
+La forma más rápida y robusta de levantar el proyecto es utilizando **Docker**. Esto garantiza que todas las dependencias (Python, librerías de PDF, seguridad) se configuren automáticamente en un entorno aislado.
+
+
+
+### 1. Requisitos
+* Tener instalado [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+* Un archivo `.env` en la raíz con tus credenciales.
+
+### 2. Archivo `docker-compose.yml`
+Asegúrate de tener un archivo llamado `docker-compose.yml` con la siguiente configuración:
+
+| Parámetro | Descripción |
+| :--- | :--- |
+| **Persistencia** | Los datos de usuarios (`iachatbot.db`) y los PDFs se guardan en tu PC. |
+| **Aislamiento** | La API corre en el puerto 8000 dentro y fuera del contenedor. |
+| **Auto-restart** | El servicio se reinicia automáticamente si falla. |
+
+### 3. Comandos para iniciar
+Desde la terminal en la carpeta del proyecto:
+
+```bash
+# Construir la imagen y levantar el servicio en segundo plano
+docker compose up -d --build
+
+# Ver el estado del contenedor
+docker ps
+
+# Ver los logs en tiempo real (para depuración)
+docker logs -f turbolauncher-app
+
+--
+
 ## ✨ Características Principales
 
 * 🔐 **Seguridad Avanzada**: Implementación de autenticación OAuth2 con tokens JWT y hashing de contraseñas mediante Bcrypt.
