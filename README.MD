@@ -5,93 +5,91 @@
 ![Pinecone](https://img.shields.io/badge/Pinecone-000000?style=for-the-badge&logo=pinecone)
 ![SQLite](https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white)
 
-**TurboLauncher** es un motor de búsqueda y respuesta inteligente basado en **RAG (Retrieval-Augmented Generation)**. Permite a los usuarios cargar archivos PDF, procesarlos para extraer su conocimiento y realizar consultas en lenguaje natural, obteniendo respuestas precisas y contextualmente relevantes basadas exclusivamente en sus documentos personales.
+**TurboLauncher** is an intelligent search and question-answering engine built on **RAG (Retrieval-Augmented Generation)**. It allows users to upload PDF files, process them to extract knowledge, and query them in natural language, returning precise, contextually relevant answers strictly based on their personal documents.
 
 ---
 
-## 🐳 Despliegue con Docker Compose (Recomendado)
+## 🐳 Deployment with Docker Compose (Recommended)
 
-La forma más rápida y robusta de levantar el proyecto es utilizando **Docker**. Esto garantiza que todas las dependencias (Python, librerías de PDF, seguridad) se configuren automáticamente en un entorno aislado.
+The fastest and most robust way to run the project is using **Docker**. This ensures all dependencies (Python, PDF libraries, security components) are automatically configured in an isolated environment.
 
+### 1. Requirements
+* [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed.
+* A `.env` file at the project root containing your credentials.
 
+### 2. `docker-compose.yml` File
+Ensure you have a file named `docker-compose.yml` with the appropriate configuration:
 
-### 1. Requisitos
-* Tener instalado [Docker Desktop](https://www.docker.com/products/docker-desktop/).
-* Un archivo `.env` en la raíz con tus credenciales.
-
-### 2. Archivo `docker-compose.yml`
-Asegúrate de tener un archivo llamado `docker-compose.yml` con la siguiente configuración:
-
-| Parámetro | Descripción |
+| Parameter | Description |
 | :--- | :--- |
-| **Persistencia** | Los datos de usuarios (`iachatbot.db`) y los PDFs se guardan en tu PC. |
-| **Aislamiento** | La API corre en el puerto 8000 dentro y fuera del contenedor. |
-| **Auto-restart** | El servicio se reinicia automáticamente si falla. |
+| **Persistence** | User data (`iachatbot.db`) and uploaded PDFs are stored on your local machine. |
+| **Isolation** | The API runs on port 8000 both inside and outside the container. |
+| **Auto-restart** | The service restarts automatically if it crashes. |
 
-### 3. Comandos para iniciar
-Desde la terminal en la carpeta del proyecto:
+### 3. Startup Commands
+From a terminal in the project directory:
 
 ```bash
-# Construir la imagen y levantar el servicio en segundo plano
 docker compose up -d --build
 
-# Ver el estado del contenedor
 docker ps
 
-# Ver los logs en tiempo real (para depuración)
 docker logs -f turbolauncher-app
+```
 
 --
 
-## ✨ Características Principales
+## ✨ Key Features
 
-* 🔐 **Seguridad Avanzada**: Implementación de autenticación OAuth2 con tokens JWT y hashing de contraseñas mediante Bcrypt.
-* 📄 **Procesamiento de PDF**: Extracción automatizada de texto y limpieza de caracteres especiales.
-* 🧠 **Embeddings de Nueva Generación**: Uso del modelo `text-embedding-3-small` de OpenAI con 1024 dimensiones para una representación semántica superior.
-* ⚡ **Búsqueda Vectorial**: Almacenamiento e indexación en **Pinecone** para una recuperación de información en milisegundos.
-* 🤖 **GPT-4o Integration**: Generación de respuestas utilizando el modelo más reciente de OpenAI, limitándose estrictamente al contexto proporcionado.
-* 👤 **Privacidad Multi-usuario**: Filtros de búsqueda basados en metadatos para asegurar que cada usuario acceda solo a su propia información.
+- 🔐 **Advanced Security**: OAuth2 authentication with JWT tokens and password hashing via Bcrypt.
+- 📄 **PDF Processing**: Automated text extraction and cleanup of special characters.
+- 🧠 **Next-Generation Embeddings**: Uses OpenAI’s `text-embedding-3-small` model with 1024 dimensions for strong semantic representation.
+- ⚡ **Vector Search**: Storage and indexing in Pinecone for millisecond-level retrieval.
+- 🤖 **GPT-4o Integration**: Answer generation using OpenAI’s latest model, strictly constrained to the provided context.
+- 👤 **Multi-user Privacy**: Metadata-based filters ensure users can only access their own documents.
 
 ---
 
-## 🛠️ Stack Tecnológico
+## 🛠️ Tech Stack
 
-| Herramienta | Función |
+| Tool | Purpose |
 | :--- | :--- |
-| **FastAPI** | Framework principal para la construcción de la API REST. |
-| **OpenAI API** | Generación de embeddings vectoriales y respuestas con GPT-4o. |
-| **Pinecone** | Base de datos vectorial para el almacenamiento de chunks. |
-| **SQLite** | Gestión persistente de cuentas de usuario y credenciales. |
-| **LangChain** | Segmentación inteligente de texto (RecursiveCharacterTextSplitter). |
-| **Jose/JWT** | Firma y validación de tokens de acceso seguros. |
+| **FastAPI** | Core framework for building the REST API. |
+| **OpenAI API** | Embedding generation and GPT-4o responses. |
+| **Pinecone** | Vector database for chunk storage and retrieval. |
+| **SQLite** | Persistent storage for user accounts and credentials. |
+| **LangChain** | Intelligent text splitting (RecursiveCharacterTextSplitter). |
+| **Jose/JWT** | Secure token signing and validation. |
 
 ---
 
-## 🏗️ Flujo de Trabajo (Arquitectura)
+## 🏗️ Workflow (Architecture)
 
-1.  **Registro/Login**: El usuario se autentica para obtener un token de acceso.
-2.  **Carga de PDF**: Se sube un archivo, el cual se divide en fragmentos (chunks) con solapamiento para no perder contexto.
-3.  **Vectorización**: Cada fragmento se convierte en un vector numérico mediante la API de OpenAI.
-4.  **Indexación**: Los vectores se suben a Pinecone junto con metadatos (ID de usuario, página, nombre del archivo).
-5.  **Consulta RAG**: Al preguntar, el sistema busca los 5 fragmentos más similares en Pinecone y los envía a GPT-4o como contexto para generar la respuesta.
-
----
-
-## 📂 Estructura del Código
-
-* `main.py`: Orquestador de la aplicación y definición de rutas (endpoints).
-* `auth.py`: Lógica de seguridad, creación y validación de tokens.
-* `pdf_processing.py`: Herramientas de extracción, limpieza y chunking de documentos.
-* `db_pinecone.py`: Conector y cliente para la base de datos vectorial.
-* `database.py`: Gestión de la base de datos local SQLite.
-* `openai_utils.py`: Funciones para interactuar con los modelos de OpenAI.
+1. **Register/Login**: The user authenticates to obtain an access token.
+2. **PDF Upload**: A file is uploaded and split into overlapping chunks to preserve context.
+3. **Vectorization**: Each chunk is converted into a numerical vector using the OpenAI API.
+4. **Indexing**: Vectors are stored in Pinecone along with metadata (user ID, page, filename).
+5. **RAG Query**: On a query, the system retrieves the 5 most similar chunks from Pinecone and sends them to GPT-4o as context to generate the answer.
 
 ---
 
-## 🚀 Configuración Inicial
+## 📂 Code Structure
 
-### Variables de Entorno
-Crea un archivo `.env` en la raíz del proyecto con las siguientes claves:
+- `main.py`: Application orchestrator and route (endpoint) definitions.
+- `auth.py`: Security logic, token creation, and validation.
+- `pdf_processing.py`: Document extraction, cleanup, and chunking utilities.
+- `db_pinecone.py`: Connector and client for the vector database.
+- `database.py`: Local SQLite database management.
+- `openai_utils.py`: Helper functions for interacting with OpenAI models.
+
+---
+
+## 🚀 Initial Setup
+
+### Environment Variables
+
+Create a `.env` file at the project root with the following keys:
+
 ```env
 OPENAI_API_KEY="sk-..."
-PINECONE_API_KEY="tu_api_key_de_pinecone"
+PINECONE_API_KEY="your_pinecone_api_key"
