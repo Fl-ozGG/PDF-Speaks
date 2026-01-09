@@ -42,14 +42,9 @@ def chunk_texts(texts: List[str], chunk_size=500, chunk_overlap=100) -> List[str
     return all_chunks
 
 def process_pdf_for_user(user_id: str, pdf_path: str) -> dict:
-    """
-    Extract, clean, and chunk PDF text for a specific user.
-    Returns dictionary with chunks and metadata.
-    """
+
     pages = extract_text_from_pdf(pdf_path)
-
     chunks = chunk_texts(pages)
-
     processed_chunks = []
     document_id = str(uuid.uuid4())
 
