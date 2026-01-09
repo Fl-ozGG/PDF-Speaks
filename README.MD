@@ -1,11 +1,11 @@
-# 🚀 TurboLauncher: RAG Document Intelligence
+# 🚀 PDF-Speaks: RAG Document Intelligence
 
 ![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
 ![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white)
 ![Pinecone](https://img.shields.io/badge/Pinecone-000000?style=for-the-badge&logo=pinecone)
 ![SQLite](https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white)
 
-**TurboLauncher** is an intelligent search and question-answering engine built on **RAG (Retrieval-Augmented Generation)**. It allows users to upload PDF files, process them to extract knowledge, and query them in natural language, returning precise, contextually relevant answers strictly based on their personal documents.
+**PDF-Speaks** is an intelligent search and question-answering engine built on **RAG (Retrieval-Augmented Generation)**. It allows users to upload PDF files, process them to extract knowledge, and query them in natural language, returning precise, contextually relevant answers strictly based on their personal documents.
 
 ## 📖 API Documentation
 
